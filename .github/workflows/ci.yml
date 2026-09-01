@@ -5,6 +5,10 @@ on:
     branches:
       - main
       - homolog
+  push:
+    branches:
+      - homolog
+      - main
 
 permissions:
   contents: read
@@ -28,4 +32,3 @@ jobs:
 
       - name: Terraform validate
         run: terraform -chdir=terraform validate
-

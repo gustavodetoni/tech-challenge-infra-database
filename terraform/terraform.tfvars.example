@@ -1,0 +1,22 @@
+project_name = "tech-challenge"
+aws_region   = "us-east-1"
+environment  = "homolog"
+
+db_name     = "tech_challenge"
+db_user     = "tech_challenge"
+db_password = "troque-essa-senha"
+
+db_instance_class              = "db.t3.micro"
+allocated_storage              = 20
+max_allocated_storage          = 50
+backup_retention_period        = 7
+backup_window                  = "03:00-04:00"
+maintenance_window             = "sun:04:00-sun:05:00"
+cloudwatch_log_retention_days  = 14
+
+k8s_state_bucket = "tech-challenge-terraform-state"
+k8s_state_key    = "tech-challenge/k8s/homolog.tfstate"
+k8s_state_region = "us-east-1"
+
+# Outputs do repositorio tech-challenge-auth-lambda, quando a Lambda precisar acessar o RDS.
+lambda_security_group_ids = []

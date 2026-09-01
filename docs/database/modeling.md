@@ -21,4 +21,10 @@ O banco principal recomendado e PostgreSQL gerenciado, por aderencia ao projeto 
 - Indices por status e relacionamentos de OS.
 - Indices parciais com `deleted_at IS NULL` para soft delete.
 - Transacoes para aprovacao de orcamento e baixa de estoque.
+- Parameter group PostgreSQL com log de conexoes e queries lentas acima de 1000 ms.
+- Logs `postgresql` e `upgrade` publicados no CloudWatch.
+- Armazenamento criptografado e autoscaling de storage configurado no RDS.
 
+## Status Do Cliente
+
+O modelo atual usa `deleted_at` para soft delete. Para a Lambda de autenticacao, clientes com `deleted_at IS NULL` sao tratados como `ACTIVE`; clientes removidos logicamente sao tratados como `INACTIVE` e nao recebem JWT.
