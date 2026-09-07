@@ -2,6 +2,13 @@
 
 Infraestrutura do banco de dados gerenciado e documentacao da modelagem relacional da oficina.
 
+## Repositorios Da Entrega
+
+- Aplicacao principal: https://github.com/gustavodetoni/tech-challenge-project
+- Lambda Auth CPF/CNPJ: https://github.com/gustavodetoni/tech-challenge-auth-lambda
+- Infra Kubernetes: https://github.com/gustavodetoni/tech-challenge-infra-k8s
+- Infra Database: https://github.com/gustavodetoni/tech-challenge-infra-database
+
 ## Proposito
 
 Este repositorio provisiona o banco gerenciado PostgreSQL e documenta a modelagem relacional, indices, constraints, relacionamentos e decisoes de performance.
@@ -33,6 +40,9 @@ terraform -chdir=terraform validate
 Este repositorio consome os outputs do state do `tech-challenge-infra-k8s` para reutilizar VPC, subnets privadas, security group dos nodes do EKS e security group da Lambda.
 
 ## Deploy
+
+O workflow de deploy esta versionado em `.github/workflows/deploy.yml`, mas o deploy automatico esta temporariamente desabilitado para o primeiro push do repositorio.
+Quando as variaveis AWS/Terraform/database estiverem configuradas, o workflow deve ser reativado para deploy nas branches de homologacao e producao.
 
 Fluxo previsto:
 
@@ -94,5 +104,9 @@ EKS / Lambda
 
 ## Links
 
-- Swagger/Postman da API principal: pendente
+- Repositorio: https://github.com/gustavodetoni/tech-challenge-infra-database
+- Swagger da API principal: https://github.com/gustavodetoni/tech-challenge-project/blob/main/docs/swagger.yaml
+- Postman da API principal: https://github.com/gustavodetoni/tech-challenge-project/blob/main/docs/collections/tech-challenge.postman_collection.json
 - Endpoint do banco: privado, nao aplicavel
+- Deploy homologacao: nao possui URL publica; outputs serao gerados apos o primeiro deploy cloud.
+- Deploy producao: nao possui URL publica; outputs serao gerados apos o primeiro deploy cloud.
