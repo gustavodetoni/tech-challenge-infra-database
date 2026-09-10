@@ -21,6 +21,12 @@ Este repositorio provisiona o banco gerenciado PostgreSQL e documenta a modelage
 - GitHub Actions
 - Mermaid para diagramas
 
+## Governanca Dos Repositorios
+
+Os quatro repositorios da entrega possuem branch protection ativa na branch `main`, exigindo Pull Request para merge, execucao das validacoes de CI e impedindo commits diretos como fluxo oficial de desenvolvimento.
+
+Branches de homologacao e producao sao atendidas por GitHub Actions. O deploy e automatizado pela esteira: apos o disparo definido no workflow, a pipeline valida Terraform, provisiona o RDS PostgreSQL na AWS e publica os outputs necessarios para a aplicacao e para a Lambda.
+
 ## Estrutura
 
 ```text
@@ -41,20 +47,20 @@ Este repositorio consome os outputs do state do `tech-challenge-infra-k8s` para 
 
 ## Deploy
 
-O deploy e executado manualmente pelo GitHub Actions para facilitar a demonstracao no AWS Academy e permitir destruir os recursos depois da gravacao.
-O gatilho automatico por `push` esta comentado no workflow e deve ser habilitado apenas quando as branches de homologacao/producao estiverem configuradas.
+O deploy e automatizado pelo GitHub Actions para AWS usando Terraform.
+A esteira provisiona o banco gerenciado PostgreSQL no RDS, cria a infraestrutura de seguranca associada e reutiliza os outputs de rede do repositorio `tech-challenge-infra-k8s`.
 
 Antes do `terraform init`, o workflow faz bootstrap do backend S3. Esse passo cria o bucket de state quando necessario e cria um state vazio valido quando o objeto `tech-challenge/database/<ambiente>.tfstate` tiver sido removido, evitando a falha `HeadObject 403` comum em contas AWS Academy sem permissao de listagem completa.
 
 Fluxo previsto:
 
 ```text
-pull_request -> terraform fmt/validate
-Run workflow -> action=apply, environment=homolog
-Run workflow -> action=destroy, environment=homolog
+pull_request      -> terraform fmt/validate
+main/homolog/prod -> terraform apply
+destroy           -> terraform destroy controlado
 ```
 
-Inputs do workflow manual:
+Inputs do workflow:
 
 ```text
 action       apply ou destroy
@@ -70,6 +76,18 @@ Depois do deploy, os outputs devem alimentar:
 - `DATABASE_URL` da aplicacao principal.
 - `DATABASE_URL` da Lambda Auth.
 - Security rules para acesso privado de EKS e Lambda.
+
+## Terraform
+
+A pasta `terraform/` e a fonte oficial de infraestrutura do banco gerenciado.
+Ela provisiona:
+
+- RDS PostgreSQL privado.
+- Subnet group com subnets privadas do VPC do EKS.
+- Security group permitindo acesso somente da API no EKS e da Lambda Auth.
+- Parametros de banco para homologacao/producao.
+- Outputs usados pelas demais esteiras.
+- Backend remoto S3 para state Terraform.
 
 ## Secrets Para Subida
 
@@ -105,6 +123,13 @@ EKS / Lambda
           -> Logs
 ```
 
+## Observabilidade
+
+O banco fica em rede privada e e consumido pela API principal no EKS e pela Lambda Auth.
+A rastreabilidade ponta a ponta e feita pelo `traceId`/`correlation_id` emitido pela aplicacao, que permite correlacionar chamadas HTTP, operacoes da API e erros de integracao com o RDS nos logs estruturados coletados pelo Datadog Agent.
+
+O Datadog Agent instalado pelo repositorio `tech-challenge-infra-k8s` coleta metricas e logs do cluster Kubernetes, permitindo acompanhar latencia, erros, consumo de recursos, healthchecks e impactos operacionais ligados ao banco durante os fluxos de ordem de servico.
+
 ## Documentacao Do Banco
 
 - [Justificativa PostgreSQL](docs/database/postgresql-choice.md)
@@ -119,5 +144,5 @@ EKS / Lambda
 - Swagger da API principal: https://github.com/gustavodetoni/tech-challenge-project/blob/main/docs/swagger.yaml
 - Postman da API principal: https://github.com/gustavodetoni/tech-challenge-project/blob/main/docs/collections/tech-challenge.postman_collection.json
 - Endpoint do banco: privado, nao aplicavel
-- Deploy homologacao: nao possui URL publica; outputs serao gerados apos o primeiro deploy cloud.
-- Deploy producao: nao possui URL publica; outputs serao gerados apos o primeiro deploy cloud.
+- Deploy homologacao: RDS privado provisionado por Terraform, consumido pela API em https://hwq42fgalh.execute-api.us-east-1.amazonaws.com
+- Deploy producao: mesmo fluxo automatizado de deploy, usando `environment=prod`.
