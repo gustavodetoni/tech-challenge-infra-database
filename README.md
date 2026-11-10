@@ -134,7 +134,7 @@ O Datadog Agent instalado pelo repositorio `tech-challenge-infra-k8s` coleta met
 
 ## Limitação atual da Fase 4
 
-O Terraform atual cria uma instância RDS e ainda não cria automaticamente os bancos lógicos `os_service` e `billing_service`. Antes do deploy final, eles devem ser criados por uma migration/bootstrap controlada ou por recursos Terraform com o provider PostgreSQL. Portanto, a separação por ownership está definida nos serviços e URLs, mas a automação de criação dos bancos ainda é pendente.
+Os bancos lógicos `os_service` e `billing_service` são criados pelo Job idempotente `tech-challenge-database-bootstrap`, executado pelo workflow do repositório `tech-challenge-infra-k8s` antes do rollout dos microsserviços. O Terraform continua responsável pelo RDS, rede e segurança; o bootstrap roda dentro do cluster porque o RDS é privado.
 
 ## Documentacao Do Banco
 
