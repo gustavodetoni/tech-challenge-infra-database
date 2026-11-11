@@ -11,7 +11,7 @@ Infraestrutura do banco de dados gerenciado e documentacao da modelagem relacion
 
 ## Proposito
 
-Este repositorio provisiona o banco gerenciado PostgreSQL e documenta a modelagem relacional, indices, constraints, relacionamentos e decisoes de performance.
+Este repositorio provisiona o banco gerenciado PostgreSQL e documenta a modelagem relacional, indices, constraints, relacionamentos e decisoes de performance. Na Fase 4, a configuração espera bancos lógicos independentes no RDS (`tech_challenge`, `os_service` e `billing_service`), com cada URL entregue a apenas um microsserviço. O Execution Service usa MongoDB próprio provisionado no Kubernetes.
 
 ## Tecnologias
 
@@ -23,7 +23,7 @@ Este repositorio provisiona o banco gerenciado PostgreSQL e documenta a modelage
 
 ## Governanca Dos Repositorios
 
-Os quatro repositorios da entrega possuem branch protection ativa na branch `main`, exigindo Pull Request para merge, execucao das validacoes de CI e impedindo commits diretos como fluxo oficial de desenvolvimento.
+Os repositórios oficiais da Fase 3 possuem branch protection na branch `main`. Para a Fase 4, os três novos repositórios já possuem workflows e branch `main` local; a proteção de branch e os PRs obrigatórios ainda precisam ser habilitados após a publicação dos remotes.
 
 Branches de homologacao e producao sao atendidas por GitHub Actions. O deploy e automatizado pela esteira: apos o disparo definido no workflow, a pipeline valida Terraform, provisiona o RDS PostgreSQL na AWS e publica os outputs necessarios para a aplicacao e para a Lambda.
 
@@ -76,6 +76,7 @@ Depois do deploy, os outputs devem alimentar:
 - `DATABASE_URL` da aplicacao principal.
 - `DATABASE_URL` da Lambda Auth.
 - Security rules para acesso privado de EKS e Lambda.
+- `OS_DATABASE_URL` e `BILLING_DATABASE_URL` dos Secrets do overlay Kubernetes.
 
 ## Terraform
 
@@ -87,6 +88,7 @@ Ela provisiona:
 - Security group permitindo acesso somente da API no EKS e da Lambda Auth.
 - Parametros de banco para homologacao/producao.
 - Outputs usados pelas demais esteiras.
+- Bancos lógicos `os_service` e `billing_service` isolados por ownership e migrations próprias.
 - Backend remoto S3 para state Terraform.
 
 ## Secrets Para Subida
@@ -129,6 +131,10 @@ O banco fica em rede privada e e consumido pela API principal no EKS e pela Lamb
 A rastreabilidade ponta a ponta e feita pelo `traceId`/`correlation_id` emitido pela aplicacao, que permite correlacionar chamadas HTTP, operacoes da API e erros de integracao com o RDS nos logs estruturados coletados pelo Datadog Agent.
 
 O Datadog Agent instalado pelo repositorio `tech-challenge-infra-k8s` coleta metricas e logs do cluster Kubernetes, permitindo acompanhar latencia, erros, consumo de recursos, healthchecks e impactos operacionais ligados ao banco durante os fluxos de ordem de servico.
+
+## Limitação atual da Fase 4
+
+Os bancos lógicos `os_service` e `billing_service` são criados pelo Job idempotente `tech-challenge-database-bootstrap`, executado pelo workflow do repositório `tech-challenge-infra-k8s` antes do rollout dos microsserviços. O Terraform continua responsável pelo RDS, rede e segurança; o bootstrap roda dentro do cluster porque o RDS é privado.
 
 ## Documentacao Do Banco
 
