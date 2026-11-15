@@ -152,3 +152,19 @@ Os bancos lógicos `os_service` e `billing_service` são criados pelo Job idempo
 - Endpoint do banco: privado, nao aplicavel
 - Deploy homologacao: RDS privado provisionado por Terraform, consumido pela API em https://hwq42fgalh.execute-api.us-east-1.amazonaws.com
 - Deploy producao: mesmo fluxo automatizado de deploy, usando `environment=prod`.
+
+## Papel na Fase 4
+
+Este repositório é responsável pela infraestrutura relacional compartilhada da solução. O RDS é privado e é acessado pelos workloads autorizados do EKS.
+
+Ownership dos dados:
+
+```text
+OS Service       → os_service
+Billing Service  → billing_service
+API/Auth legado  → tech_challenge
+```
+
+O Job `tech-challenge-database-bootstrap`, aplicado pelo [tech-challenge-infra-k8s](../tech-challenge-infra-k8s/k8s/base/database-bootstrap.yaml), cria os bancos lógicos `os_service` e `billing_service` de forma idempotente antes do rollout. O Execution Service não usa este RDS: utiliza MongoDB próprio no Kubernetes.
+
+Assim, nenhum microsserviço acessa tabelas ou bancos pertencentes a outro serviço.
